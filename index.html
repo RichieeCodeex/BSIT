@@ -69,7 +69,6 @@
             margin: 10px 0 40px 0;
         }
 
-        /* MOBILE UI: Vertical Stack / DESKTOP UI: Horizontal */
         .awards-wrapper {
             display: flex;
             flex-direction: column;
@@ -93,6 +92,7 @@
             border-radius: 20px;
             box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
             transition: 0.3s ease;
+            cursor: pointer;
         }
 
         .award-box:active, .award-box:hover {
@@ -108,6 +108,75 @@
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-15px); }
         }
+
+        /* --- POPUP MODAL STYLES --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            position: relative;
+            max-width: 85%;
+            max-height: 80vh;
+            border: 2px solid #00f2ff;
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.4);
+            transform: scale(0.7);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: #000;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-img {
+            max-width: 100%;
+            max-height: 80vh;
+            object-fit: contain;
+            display: block;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 2.5rem;
+            color: #00f2ff;
+            cursor: pointer;
+            text-shadow: 0 0 10px #00f2ff;
+            transition: 0.2s;
+            user-select: none;
+            z-index: 105;
+        }
+
+        .modal-close:hover {
+            transform: scale(1.2);
+            color: #fff;
+        }
     </style>
 </head>
 <body>
@@ -120,16 +189,23 @@
     <div class="school-text">Davao del Sur State College</div>
     
     <div class="awards-wrapper">
-        <div class="award-box">
-            <span class="award-icon">🏆</span>
+        <div class="award-box" id="award-1st">
+            <span class="award-icon">🥇</span>
             <div class="award-rank">1ST PLACE</div>
             <div class="award-title">Cheerdance Competition</div>
         </div>
-        <div class="award-box">
+        <div class="award-box" id="award-2nd">
             <span class="award-icon">🥈</span>
             <div class="award-rank">2ND PLACE</div>
             <div class="award-title">Contemporary Dance</div>
         </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="imageModal">
+    <div class="modal-content">
+        <span class="modal-close" id="modalClose">&times;</span>
+        <img src="" alt="Award Image" class="modal-img" id="modalImg">
     </div>
 </div>
 
@@ -143,11 +219,7 @@ canvas.height = window.innerHeight;
 let particlesArray = [];
 const particleColor = "#00f2ff";
 
-let mouse = {
-    x: null,
-    y: null,
-    radius: 180
-};
+let mouse = { x: null, y: null, radius: 180 };
 
 window.addEventListener('mousemove', (e) => { mouse.x = e.x; mouse.y = e.y; });
 window.addEventListener('touchstart', (e) => { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; });
@@ -166,7 +238,6 @@ class Particle {
         ctx.shadowColor = particleColor;
         ctx.fill();
         
-        // Inner core
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size * 0.4, 0, Math.PI * 2);
         ctx.fillStyle = "white";
@@ -181,7 +252,7 @@ class Particle {
             let dy = mouse.y - this.y;
             let dist = Math.sqrt(dx*dx + dy*dy);
             if (dist < mouse.radius) {
-                this.x += dx / 10; // Aggressive attraction
+                this.x += dx / 10;
                 this.y += dy / 10;
             }
         }
@@ -215,8 +286,8 @@ function init() {
         particlesArray.push(new Particle(
             Math.random() * canvas.width,
             Math.random() * canvas.height,
-            (Math.random() * 4) - 2, // SPEED MULTIPLIED (High velocity)
-            (Math.random() * 4) - 2, // SPEED MULTIPLIED (High velocity)
+            (Math.random() * 4) - 2,
+            (Math.random() * 4) - 2,
             Math.random() * 3 + 2
         ));
     }
@@ -238,6 +309,37 @@ window.addEventListener('resize', () => {
 
 init();
 animate();
+
+// --- POPUP MODAL JAVASCRIPT LOGIC ---
+const modal = document.getElementById('imageModal');
+const modalImg = document.getElementById('modalImg');
+const modalClose = document.getElementById('modalClose');
+const award1st = document.getElementById('award-1st');
+const award2nd = document.getElementById('award-2nd');
+
+// Click 1st Place -> Show Cheerdance.jpg
+award1st.addEventListener('click', () => {
+    modalImg.src = 'Cheerdance.jpg';
+    modal.classList.add('active');
+});
+
+// Click 2nd Place -> Show Contempo.jpg
+award2nd.addEventListener('click', () => {
+    modalImg.src = 'Contempo.jpg';
+    modal.classList.add('active');
+});
+
+// Close modal via 'X' button
+modalClose.addEventListener('click', () => {
+    modal.classList.remove('active');
+});
+
+// Close modal via clicking anywhere outside the image card
+modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+        modal.classList.remove('active');
+    }
+});
 </script>
 </body>
 </html>
