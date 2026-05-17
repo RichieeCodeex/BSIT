@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BSIT-2B Champions | DSSC</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            font-family: 'Orbitron', sans-serif;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        #bg-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.9) 100%);
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        #ui-container {
+            position: relative;
+            z-index: 10;
+            width: 90%;
+            max-width: 800px;
+            padding: 40px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .name-tag {
+            font-size: clamp(3rem, 15vw, 6.5rem);
+            font-weight: 900;
+            color: #00f2ff;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            margin: 0;
+            text-shadow: 0 0 20px #00f2ff, 0 0 40px rgba(0, 242, 255, 0.6);
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .school-text {
+            font-size: clamp(0.7rem, 4vw, 1.1rem);
+            color: #00f2ff;
+            opacity: 0.8;
+            letter-spacing: 3px;
+            margin: 10px 0 40px 0;
+        }
+
+        /* MOBILE UI: Vertical Stack / DESKTOP UI: Horizontal */
+        .awards-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+        }
+
+        @media (min-width: 768px) {
+            .awards-wrapper {
+                flex-direction: row;
+                justify-content: center;
+            }
+        }
+
+        .award-box {
+            background: rgba(0, 242, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 2px solid #00f2ff;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
+            transition: 0.3s ease;
+        }
+
+        .award-box:active, .award-box:hover {
+            transform: scale(1.05);
+            background: rgba(0, 242, 255, 0.2);
+        }
+
+        .award-icon { font-size: 2.5rem; margin-bottom: 10px; display: block; }
+        .award-rank { font-weight: bold; color: #00f2ff; font-size: 1.2rem; }
+        .award-title { font-size: 0.9rem; color: #fff; margin-top: 5px; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+    </style>
+</head>
+<body>
+
+<div id="bg-overlay"></div>
+<canvas id="canvas1"></canvas>
+
+<div id="ui-container">
+    <h1 class="name-tag">BSIT-2B</h1>
+    <div class="school-text">Davao del Sur State College</div>
+    
+    <div class="awards-wrapper">
+        <div class="award-box">
+            <span class="award-icon">🏆</span>
+            <div class="award-rank">1ST PLACE</div>
+            <div class="award-title">Cheerdance Competition</div>
+        </div>
+        <div class="award-box">
+            <span class="award-icon">🥈</span>
+            <div class="award-rank">2ND PLACE</div>
+            <div class="award-title">Contemporary Dance</div>
+        </div>
+    </div>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas1');
+const ctx = canvas.getContext('2d');
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let particlesArray = [];
+const particleColor = "#00f2ff";
+
+let mouse = {
+    x: null,
+    y: null,
+    radius: 180
+};
+
+window.addEventListener('mousemove', (e) => { mouse.x = e.x; mouse.y = e.y; });
+window.addEventListener('touchstart', (e) => { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; });
+window.addEventListener('touchmove', (e) => { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; });
+window.addEventListener('touchend', () => { mouse.x = null; mouse.y = null; });
+
+class Particle {
+    constructor(x, y, dx, dy, size) {
+        this.x = x; this.y = y; this.dx = dx; this.dy = dy; this.size = size;
+    }
+    draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = particleColor;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = particleColor;
+        ctx.fill();
+        
+        // Inner core
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size * 0.4, 0, Math.PI * 2);
+        ctx.fillStyle = "white";
+        ctx.fill();
+    }
+    update() {
+        if (this.x > canvas.width || this.x < 0) this.dx = -this.dx;
+        if (this.y > canvas.height || this.y < 0) this.dy = -this.dy;
+        
+        if (mouse.x != null) {
+            let dx = mouse.x - this.x;
+            let dy = mouse.y - this.y;
+            let dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist < mouse.radius) {
+                this.x += dx / 10; // Aggressive attraction
+                this.y += dy / 10;
+            }
+        }
+        this.x += this.dx;
+        this.y += this.dy;
+        this.draw();
+    }
+}
+
+function connect() {
+    if (mouse.x == null) return;
+    for (let i = 0; i < particlesArray.length; i++) {
+        let dx = mouse.x - particlesArray[i].x;
+        let dy = mouse.y - particlesArray[i].y;
+        let dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < mouse.radius) {
+            ctx.strokeStyle = `rgba(0, 242, 255, ${1 - dist/mouse.radius})`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(particlesArray[i].x, particlesArray[i].y);
+            ctx.lineTo(mouse.x, mouse.y);
+            ctx.stroke();
+        }
+    }
+}
+
+function init() {
+    particlesArray = [];
+    let count = (canvas.height * canvas.width) / 12000;
+    for (let i = 0; i < count; i++) {
+        particlesArray.push(new Particle(
+            Math.random() * canvas.width,
+            Math.random() * canvas.height,
+            (Math.random() * 4) - 2, // SPEED MULTIPLIED (High velocity)
+            (Math.random() * 4) - 2, // SPEED MULTIPLIED (High velocity)
+            Math.random() * 3 + 2
+        ));
+    }
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.shadowBlur = 0;
+    particlesArray.forEach(p => p.update());
+    connect();
+}
+
+window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    init();
+});
+
+init();
+animate();
+</script>
+</body>
+</html>
